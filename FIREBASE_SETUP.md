@@ -65,3 +65,15 @@ After enabling both authentication methods:
 - **permission-denied**: Firestore rules are too restrictive
 - **auth/weak-password**: Password must be at least 6 characters
 - **auth/email-already-in-use**: Account with this email already exists
+- **index required error**: If you see "The query requires an index", the app now handles sorting on the client side to avoid this issue
+
+## Optional: Create Firestore Index (Advanced)
+
+If you want server-side sorting for better performance with large datasets, you can create the composite index:
+
+1. If you see an index error, Firebase will provide a direct link to create it
+2. Or manually go to Firestore → Indexes → Create Index
+3. Collection: `todos`
+4. Fields: `userId` (Ascending), `createdAt` (Descending)
+
+The current app works without this index by sorting on the client side.

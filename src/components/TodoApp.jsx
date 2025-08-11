@@ -22,18 +22,28 @@ export default function TodoApp({ user }) {
   useEffect(() => {
     if (!user) return;
 
-    const todosQuery = user.isAnonymous 
-      ? query(collection(db, "todos"), orderBy("createdAt", "desc"))
-      : query(
-          collection(db, "todos"), 
-          where("userId", "==", user.uid),
-          orderBy("createdAt", "desc")
-        );
+    // Use simpler query to avoid composite index requirement
+    const todosQuery = query(
+      collection(db, "todos"), 
+      where("userId", "==", user.uid)
+    );
 
     const unsubscribe = onSnapshot(
       todosQuery,
       (snapshot) => {
-        setTodos(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+        const todosData = snapshot.docs.map((doc) => ({ 
+          id: doc.id, 
+          ...doc.data() 
+        }));
+        
+        // Sort on client side to avoid composite index
+        const sortedTodos = todosData.sort((a, b) => {
+          const aTime = a.createdAt?.toDate?.() || new Date(0);
+          const bTime = b.createdAt?.toDate?.() || new Date(0);
+          return bTime - aTime; // newest first
+        });
+        
+        setTodos(sortedTodos);
         setError(null);
       },
       (error) => {
