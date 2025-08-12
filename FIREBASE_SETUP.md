@@ -7,8 +7,14 @@
 3. Go to **Authentication** → **Sign-in method**
 4. Enable the following authentication methods:
    - **Email/Password** (for user accounts)
+   - **Google** (for Google Sign-In)
    - **Anonymous** (for guest users)
-5. Click **Save** for each method
+5. For Google Sign-In:
+   - Click on Google provider
+   - Enable it
+   - Add your project support email
+   - Click **Save**
+6. Click **Save** for each method
 
 ## 2. Set up Firestore Database
 
@@ -40,6 +46,7 @@ service cloud.firestore {
 ### Authentication Options:
 
 - **Email/Password**: Create account and sign in with email
+- **Google Sign-In**: Sign in with your Google account (one-click)
 - **Anonymous/Guest**: Use the app without creating an account
 - **Sign Out**: Switch between accounts
 
@@ -51,17 +58,20 @@ service cloud.firestore {
 
 ## 5. Test the Setup
 
-After enabling both authentication methods:
+After enabling all authentication methods:
 
 1. Refresh your app
 2. Try creating an account with email/password
-3. Try signing in as a guest
-4. Add todos and verify they're saved
-5. Sign out and sign back in to verify data persistence
+3. Try signing in with Google
+4. Try signing in as a guest
+5. Add todos and verify they're saved
+6. Sign out and sign back in to verify data persistence
 
 ## Troubleshooting
 
-- **auth/configuration-not-found**: Email/Password or Anonymous auth not enabled
+- **auth/configuration-not-found**: Email/Password, Google, or Anonymous auth not enabled
+- **auth/popup-closed-by-user**: Google sign-in popup was closed
+- **auth/popup-blocked**: Google sign-in popup was blocked by browser
 - **permission-denied**: Firestore rules are too restrictive
 - **auth/weak-password**: Password must be at least 6 characters
 - **auth/email-already-in-use**: Account with this email already exists

@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { 
-  createUserWithEmailAndPassword, 
+import {
+  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInAnonymously 
+  signInAnonymously,
+  signInWithPopup,
+  GoogleAuthProvider,
 } from "firebase/auth";
 import { auth } from "../firebase";
 
@@ -35,7 +37,7 @@ export default function AuthForm() {
   const handleAnonymousSignIn = async () => {
     setLoading(true);
     setError("");
-    
+
     try {
       await signInAnonymously(auth);
     } catch (error) {
@@ -46,22 +48,43 @@ export default function AuthForm() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Google auth error:", error);
+      setError(getErrorMessage(error.code));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getErrorMessage = (errorCode) => {
     switch (errorCode) {
-      case 'auth/user-not-found':
-        return 'No account found with this email.';
-      case 'auth/wrong-password':
-        return 'Incorrect password.';
-      case 'auth/email-already-in-use':
-        return 'An account with this email already exists.';
-      case 'auth/weak-password':
-        return 'Password should be at least 6 characters.';
-      case 'auth/invalid-email':
-        return 'Please enter a valid email address.';
-      case 'auth/configuration-not-found':
-        return 'Email authentication is not enabled. Please enable it in Firebase Console.';
+      case "auth/user-not-found":
+        return "No account found with this email.";
+      case "auth/wrong-password":
+        return "Incorrect password.";
+      case "auth/email-already-in-use":
+        return "An account with this email already exists.";
+      case "auth/weak-password":
+        return "Password should be at least 6 characters.";
+      case "auth/invalid-email":
+        return "Please enter a valid email address.";
+      case "auth/configuration-not-found":
+        return "Authentication is not enabled. Please enable it in Firebase Console.";
+      case "auth/popup-closed-by-user":
+        return "Sign-in popup was closed. Please try again.";
+      case "auth/popup-blocked":
+        return "Sign-in popup was blocked. Please allow popups and try again.";
+      case "auth/cancelled-popup-request":
+        return "Sign-in was cancelled. Please try again.";
       default:
-        return 'An error occurred. Please try again.';
+        return "An error occurred. Please try again.";
     }
   };
 
@@ -69,23 +92,38 @@ export default function AuthForm() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6">
       {/* Background decoration */}
       <div className="absolute inset-0 opacity-20">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }}></div>
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }}
+        ></div>
       </div>
-      
+
       <div className="relative z-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-8 w-full max-w-md shadow-2xl">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            <svg
+              className="w-8 h-8 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              />
             </svg>
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent mb-2">
             TaskFlow
           </h1>
-          <p className="text-slate-400">Welcome back! Please sign in to continue</p>
+          <p className="text-slate-400">
+            Welcome back! Please sign in to continue
+          </p>
         </div>
 
         {/* Tab switcher */}
@@ -93,9 +131,9 @@ export default function AuthForm() {
           <button
             onClick={() => setIsSignUp(false)}
             className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-300 ${
-              !isSignUp 
-                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
-                : 'text-slate-300 hover:text-white'
+              !isSignUp
+                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
+                : "text-slate-300 hover:text-white"
             }`}
           >
             Sign In
@@ -103,9 +141,9 @@ export default function AuthForm() {
           <button
             onClick={() => setIsSignUp(true)}
             className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-300 ${
-              isSignUp 
-                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
-                : 'text-slate-300 hover:text-white'
+              isSignUp
+                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
+                : "text-slate-300 hover:text-white"
             }`}
           >
             Sign Up
@@ -116,8 +154,16 @@ export default function AuthForm() {
         {error && (
           <div className="bg-red-500/20 border border-red-500/30 backdrop-blur-sm rounded-2xl p-4 mb-6">
             <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              <svg
+                className="w-5 h-5 text-red-400 flex-shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
               </svg>
               <span className="text-red-300 text-sm">{error}</span>
             </div>
@@ -127,7 +173,9 @@ export default function AuthForm() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Email Address
+            </label>
             <div className="relative">
               <input
                 type="email"
@@ -138,14 +186,26 @@ export default function AuthForm() {
                 required
                 disabled={loading}
               />
-              <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+              <svg
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                />
               </svg>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Password
+            </label>
             <div className="relative">
               <input
                 type="password"
@@ -157,12 +217,24 @@ export default function AuthForm() {
                 disabled={loading}
                 minLength={6}
               />
-              <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              <svg
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
               </svg>
             </div>
             {isSignUp && (
-              <p className="text-xs text-slate-400 mt-2">Password must be at least 6 characters long</p>
+              <p className="text-xs text-slate-400 mt-2">
+                Password must be at least 6 characters long
+              </p>
             )}
           </div>
 
@@ -173,20 +245,98 @@ export default function AuthForm() {
           >
             {loading ? (
               <div className="flex items-center justify-center gap-2">
-                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="animate-spin w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 Please wait...
               </div>
+            ) : isSignUp ? (
+              "Create Account"
             ) : (
-              isSignUp ? 'Create Account' : 'Sign In'
+              "Sign In"
             )}
           </button>
         </form>
 
         {/* Divider */}
         <div className="flex items-center my-6">
+          <div className="flex-1 h-px bg-white/20"></div>
+          <span className="px-4 text-slate-400 text-sm">or continue with</span>
+          <div className="flex-1 h-px bg-white/20"></div>
+        </div>
+
+        {/* Google Sign In */}
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className="w-full py-3 px-4 bg-white text-gray-900 rounded-xl font-medium hover:bg-gray-50 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105 shadow-lg mb-4"
+        >
+          {loading ? (
+            <div className="flex items-center justify-center gap-2">
+              <svg
+                className="animate-spin w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Please wait...
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-3">
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
+              </svg>
+              Continue with Google
+            </div>
+          )}
+        </button>
+
+        {/* Second divider */}
+        <div className="flex items-center my-4">
           <div className="flex-1 h-px bg-white/20"></div>
           <span className="px-4 text-slate-400 text-sm">or</span>
           <div className="flex-1 h-px bg-white/20"></div>
@@ -200,16 +350,35 @@ export default function AuthForm() {
         >
           {loading ? (
             <div className="flex items-center justify-center gap-2">
-              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                className="animate-spin w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
               Please wait...
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                  clipRule="evenodd"
+                />
               </svg>
               Continue as Guest
             </div>
@@ -217,7 +386,12 @@ export default function AuthForm() {
         </button>
 
         {/* Footer */}
-        
+        <div className="mt-8 text-center">
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Make sure Email/Password and Google authentication are enabled in
+            your Firebase Console
+          </p>
+        </div>
       </div>
     </div>
   );
