@@ -167,19 +167,30 @@ export default function TodoApp({ user }) {
           {todos.map((todo) => (
             <li
               key={todo.id}
-              className="flex justify-between items-center bg-gray-800 px-4 py-3 rounded"
+              className="flex items-center bg-gray-800 px-4 py-3 rounded gap-3"
             >
+              {/* Checkbox */}
+              <input
+                type="checkbox"
+                checked={todo.completed}
+                onChange={() => toggleTodo(todo.id, todo.completed)}
+                className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              
+              {/* Task text */}
               <span
-                onClick={() => toggleTodo(todo.id, todo.completed)}
-                className={`cursor-pointer flex-1 ${
-                  todo.completed ? "line-through text-gray-400" : ""
+                className={`flex-1 ${
+                  todo.completed ? "line-through text-gray-400" : "text-white"
                 }`}
               >
                 {todo.text}
               </span>
+              
+              {/* Delete button */}
               <button
                 onClick={() => deleteTodo(todo.id)}
-                className="text-red-400 hover:text-red-500 ml-2 px-2"
+                className="text-red-400 hover:text-red-500 px-2 py-1 rounded hover:bg-gray-700 transition-colors"
+                title="Delete task"
               >
                 ❌
               </button>
